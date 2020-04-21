@@ -1,0 +1,50 @@
+---
+title: "Runder_advanced_week1"
+author: "Veronica Thompson"
+date: "April 20, 2020"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+### Load Data  
+```{r load}
+data = read_csv("master_flowering_time_data_2019_10_15.csv")
+```
+
+1) Let's start with the column headers. Are there any variables that are redundant? Variables that are related? Can make any guesses about how I set the experiment up based on these relationships? It might help to make a diagram here.  
+
+```{r}
+head(data)
+tail(data)
+```  
+Tail is ugly, mosty the deadbeats. Group and row are partially redundant, DNA and field ID are a 1 to 1 match, but I don't think we can show that at this point.  Group, row, and condition are related.  
+
+2) There are a couple different types of data here. When you read the data into R, do the way variables are parsed make sense? Is data format consistent within each of the variables? Are there other ways we can parse this to make it easier to work with?  
+
+Parsing is a mess here. some should clearly be dates, others should be factors.  
+```{r}
+#example of how to change parse of one column. I would just fix it in read_csv is the first place.  
+data$genotype = parse_factor(data$genotype)
+head(data) #can see this is a factor now
+```   
+```{r}
+data_parsed = read_csv("master_flowering_time_data_2019_10_15.csv", 
+                       col_types = cols( 
+                       genotype = col_factor(),
+                       group = col_factor(), 
+                       germ = col_date(format = "%m_%d_%Y")))
+```  
+Some of these were not formatted correctly when input. Let's look at them.   
+
+```{r}
+print(filter(data, germ == "07_2019_03"))
+```  
+These are probably all from group D. Will correct before next week...  
+
+
+3) We will be calculating some new variables from this data next week. Can you think of two suggestions? (You don't have to calculate them today)
