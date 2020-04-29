@@ -1,0 +1,98 @@
+---
+title: "week2_rundergrad"
+author: "Veronica Thompson"
+date: "April 29, 2020"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+## Week of April 27  
+R4DS Chapter 1 - Introduction to the book  
+R4DS Chapter 2 - Introduction to Exploring data  
+R4DS Chapter 3 - Data Visualization  
+Read Sections 3.1 - 3.6 and 3.10 (3.7 - 3.9 are optional)  
+
+### Complete the following problems  
+3.2.4 Problems 1-5  
+3.3.1 Problems 1-6  
+3.5.1 Problems 1-6  
+3.6.1 Problems 1-5 & select one graph from problem 6  
+
+### 3.2.4 Problems 1 - 5  
+#### 1
+```{r}
+ggplot(data = mpg)
+```  
+
+we get a blank plot, no aesthetics were defined.  
+ 
+#### 2  
+```{r}
+nrow(mpg)
+ncol(mpg)
+```
+234 rows and 11 columns  
+
+#### 3
+checked the help file. drv describes drive. There are 3 factors, front wheel, rear wheel, and 4wd.  
+#### 4  
+```{r}
+ggplot(data = mpg) +
+  geom_point(aes(x= cyl, y = hwy))
+```
+
+#### 5  
+```{r}
+ggplot(data = mpg) +
+  geom_point(aes(x= class, y = drv))
+```  
+These are two  factors, so it doesn't show much but availible combinations.
+
+### 3.3.1 Problems 1-6   
+#### 1  
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
+```  
+Color if defines in aes wll become a variable. We want to change the actual color to blue, not define the variable blue so it must be outside the aes mapping.  
+
+#### 2  
+```{r}
+summary(mpg)
+```
+
+categorical seem to be listed as character vectors, we could parse this differently to figure it out.  
+
+#### 3  
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = hwy, size = year))
+```  
+can't map a continuous variable to shape  
+
+#### 4
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = hwy))
+```  
+It uses both aesthetics.  
+
+#### 5  
+```
+vignette("ggplot2-specs")
+```  
+stroke is the outline size of each point. it definitely works with shape 21, probably only outlined shapes  
+
+#### 6  
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = displ<5))
+```  
+labels by color given this argument.  
+
+
