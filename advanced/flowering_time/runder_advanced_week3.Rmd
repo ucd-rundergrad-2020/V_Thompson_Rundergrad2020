@@ -1,0 +1,17 @@
+---
+title: "week 3"
+author: "Veronica Thompson"
+date: "April 29, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+Load Data
+```{r}
+flower_data = read_csv("master_flowering_time_data_2019_10_15.csv")
+summary(data)
+```
+
