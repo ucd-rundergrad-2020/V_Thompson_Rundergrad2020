@@ -1,0 +1,156 @@
+---
+title: "Template 05_2020"
+author: "Veronica Thompson"
+date: "May 1, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("lme4")
+library("lmerTest")
+library(emmeans)
+```
+
+## Project title
+### project subtitle
+### project data
+
+### Input aesthectics  
+set to blue/green qualitative palette for now
+```{r aesthetics}
+#edit to rename genotypes on the plots
+Tem_name_key = tibble(
+  geno = c("WT", "elf3"),
+  new_geno = c("WT", "elf3")
+)
+
+#set level and colors
+Tem_levels = c("GV342", "elf3-1")
+Tem_colors = c("#1f78b4", "#33a02c")
+```
+
+### Relative Expression plots  
+load data  
+```{r}
+#load  
+expression_data <- read_csv("master_flowering_time_data_2020_05_01.csv")
+                     col_types = cols(
+                       genotype = col_factor(),
+                       timepoint = col_factor(),
+                       sample = col_factor(), 
+                       GOI = col_factor()))
+
+#rename genotypes  
+expression_data = left_join(expression_data, geno_key, by = "genotype")
+
+#relevel genotypes  
+expression_data$new_geno = factor(expression_data$new_geno, levels = new_levels)
+
+#calculate SD points
+expression_data = expression_data %>%
+  mutate(
+    error_low = rel_exp - stand_dev,
+    error_high = rel_exp + stand_dev
+  )
+  
+expression_data
+```
+
+Plot
+```{r}
+ggplot(expression_data, aes(new_geno, rel_exp, fill = new_geno, linetype = timepoint)) + 
+  geom_bar(stat = "identity", position = "dodge", color = "black", size = 1) + #size changes line weight
+  geom_errorbar(aes(ymin = error_low, ymax = error_high),
+                position = "dodge", size = 0.8) +
+  facet_grid(. ~ GOI) +
+  labs(title = "Relative expression levels",
+       subtitle = "elf3 complementation T2 families",
+       x = "genotype",
+       y = "relative expression/AtPP2A",
+       fill = "Genotype") +
+  theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = color_key)
+```
+
+## Hypocotyl data  
+
+load and check data:
+```{r}
+hyp_data <- read_csv("elf3_T2_hypocotyl_measurements_SC_04_2020_compiled.csv",
+                     col_types = cols( 
+                       Plate_Number = col_factor(),
+                       Genotype = col_factor()))
+
+#transform hyp to mm
+hyp_data$Hyp_Length = hyp_data$Hyp_Length*10
+
+#rename Genotype to genotype so our new key works
+names(hyp_data)[5] <- "genotype"
+
+hyp_data = left_join(hyp_data, geno_key, by = "genotype")
+
+#relevel genotypes
+hyp_data$new_geno = factor(hyp_data$new_geno, levels = new_levels)
+
+#one of the elf3 points is way too short, remove that.
+hyp_data = filter(hyp_data, No. != 130)
+
+summary(hyp_data)
+```
+
+plot  
+```{r}
+ggplot(hyp_data, aes(new_geno, Hyp_Length, fill = new_geno)) + 
+  geom_boxplot(outlier.size = -1) + 
+  geom_point(alpha = 0.5, position = position_jitterdodge()) +
+  labs(title = "Hypocotyl elongation",
+       subtitle = "elf3 complementation T2 families",
+       x = "genotype",
+       y = "hypocotyl length (mm)",
+       fill = "Genotype") +
+  scale_fill_manual(values = color_key) + 
+  scale_y_continuous(breaks = c(1:9))
+```
+
+## Stats walk-through  
+### This was helpful for my refernece but not useful for plotting in the end  
+from lab 3 of MCB 205 - 2018  
+From Dan Runcie  
+
+Steps:  
+1. Visualize the data - done above  
+2. Fit a model to the data  
+3. Run model diagnostics to check model assumptions  
+4. Use the model fit to calculate summary statistics and draw conclusions  
+
+```
+hyp_model = lmer(Hyp_Length ~ Genotype + (1|Plate_Number), data = hyp_data)
+hyp_model
+```  
+
+
+```
+plot(hyp_model)
+```   
+
+residuals vs. fitted plot. Higher residuals for larger fitted values isn't great, but this is workable.  
+
+```
+means_hyp = emmeans(hyp_model,~Genotype)  #preps emmeans analysis, group by geno
+summary(means_hyp,level = 0.95,infer = c(T,F))  # note setting level (1-alpha) for the confidence intervals
+# infer = c(T,F) gives confidence intervals
+# infer = c(F,T) gives p-values intervals. Here these are testing against the null hypothesis that mu_i = 0
+# infer = c(T,T) gives both.
+```  
+
+```
+differences_geno = emmeans(hyp_model, trt.vs.ctrl ~ Genotype, ref = 2)
+summary(differences_geno,level = 0.95,infer = c(T,T))$contrast
+```  
+pretty small differences between elf3 and T2 families but most are significant... 
+
+compact letter display seems to have fallen out of favor. Is this the comparison I want to make (elf3 as control vs all others)? If so I should reorder my plot so elf3-1 is first...  

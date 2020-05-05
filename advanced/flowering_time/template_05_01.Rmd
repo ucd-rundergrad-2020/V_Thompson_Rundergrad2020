@@ -1,0 +1,117 @@
+---
+title: "Template 05_2020"
+author: "Veronica Thompson"
+date: "May 1, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("lme4")
+library("lmerTest")
+library(emmeans)
+```
+
+## Project title
+### project subtitle
+### project data
+
+Outline:  
+1. Set aesthecics  
+2. Load data  
+3. Plot  
+4. Stat summary  
+
+*Note*: when starting this document find/replace "template" with appropriate experiment descriptor.  
+Each coade chunk needs "r" indicator added as it is updated.  
+
+### Input aesthectics  
+Colors set to blue/green qualitative palette for now.  
+```{ aesthetics}
+#edit to rename genotypes on the plots
+Template_name_key = tibble(
+  geno = c("WT", "elf3"),
+  new_geno = c("WT", "elf3")
+)
+
+#set level and colors
+Template_levels = c("GV342", "elf3")
+Template_colors = c("WT" = "#1f78b4", 
+                    "elf3" = "#33a02c")
+```
+
+### Relative Expression plots  
+load data  
+```{ load data}
+#load  
+Template_data <- read_csv("",
+                     col_types = cols())
+
+#rename genotypes  
+Template_data = left_join(Template_data, Template_name_key, by = "genotype")
+
+#relevel genotypes  
+Template_data$new_geno = factor(Template_data$new_geno, levels = Template_levels)
+
+summary(template_data)
+```
+
+### Plotting  
+
+```{ plot1}
+ggplot(template_data, 
+       aes(x, y, fill = new_geno)) + 
+  geom_box() +
+  geom_point() +
+  facet_grid(. ~ condition) +
+  labs(title = "Relative expression levels",
+       subtitle = "elf3 complementation T2 families",
+       x = "genotype",
+       y = "relative expression/AtPP2A",
+       fill = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = Template_colors)
+```
+
+
+## Stats walk-through  
+### hyp as an example
+from lab 3 of MCB 205 - 2018  
+Dan Runcie  
+
+Steps:  
+1. Visualize the data - done above  
+2. Fit a model to the data  
+3. Run model diagnostics to check model assumptions  
+4. Use the model fit to calculate summary statistics and draw conclusions  
+
+```
+hyp_model = lmer(Hyp_Length ~ Genotype + (1|Plate_Number), data = hyp_data)
+hyp_model
+```  
+
+
+```
+plot(hyp_model)
+```   
+
+residuals vs. fitted plot. Residuals should be even across all values  
+
+```
+means_hyp = emmeans(hyp_model,~Genotype)  #preps emmeans analysis, group by geno
+summary(means_hyp,level = 0.95,infer = c(T,F))
+```  
+note setting level (1-alpha) for the confidence intervals  
+infer = c(T,F) gives confidence intervals  
+infer = c(F,T) gives p-values intervals. Here these are testing against the null hypothesis that mu_i = 0  
+infer = c(T,T) gives both.  
+
+```
+differences_geno = emmeans(hyp_model, trt.vs.ctrl ~ Genotype, ref = 2)
+summary(differences_geno,level = 0.95,infer = c(T,T))$contrast
+```  
+check out differences!
+

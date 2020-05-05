@@ -11,7 +11,14 @@ library(tidyverse)
 
 Load Data
 ```{r}
-flower_data = read_csv("master_flowering_time_data_2019_10_15.csv")
-summary(data)
+#flower_data = read_csv("master_flowering_time_data_2019_10_15.csv",
+#                       col_types = "ccfffffDDDDd_dddc")
+summary(flower_data)
+
+data_parsed = read_csv("master_flowering_time_data_2019_10_15.csv", 
+                       col_types = cols( 
+                       genotype = col_factor(),
+                       group = col_factor(), 
+                       germ = col_date(format = "%m_%d_%Y")))
 ```
 
