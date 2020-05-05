@@ -1,0 +1,383 @@
+---
+title: "FT 05_2020"
+author: "Veronica Thompson"
+date: "May 1, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library(RColorBrewer)
+library("lme4")
+library("lmerTest")
+library(emmeans)
+```
+
+## Flowering Time  
+### Field season 2019  
+### analysis for Rundergrad club, spring 2020  
+
+Outline:  
+1. Set aesthecics  
+2. Load data  
+3. Plot  
+4. Stat summary - coming soon!  
+
+*Note*: when starting this document find/replace "FT" with appropriate experiment descriptor. Here I used "FT"  
+Each coade chunk needs "r" indicator added as it is updated.  
+
+### Input aesthectics  
+Colors set to blue/green qualitative palette for now.  
+```{r aesthetics}
+#edit to rename genotypes on the plots
+FT_name_key = tibble(
+  genotype = c("WT", "elf3"),
+  new_geno = c("GV 342", "elf3")
+)
+
+#set level and colors
+FT_levels = c("GV 342", "elf3")
+FT_colors = c("GV 342" = "#1f78b4", 
+              "elf3" = "#33a02c")
+```
+
+ 
+### load data  
+```{r load data}
+#load  
+FT_data <- read_csv("master_flowering_time_Data_2020_05_01.csv",
+                    locale = locale(date_format = "%m_%d_%Y"),
+                     col_types = cols(
+                       DNA_ID = col_character(),
+                       field_ID = col_character(),
+                       genotype = col_factor(),
+                       group = col_factor(),
+                       row = col_factor(),
+                       `end?` = col_factor(),
+                       condition = col_factor(),
+                       germ = col_date(),
+                       yellow = col_date(),
+                       flowering = col_date(),
+                       final = col_date(),
+                       diameter = col_double(),
+                       direction = col_character(),
+                       height = col_double(),
+                       leaf_num = col_double(),
+                       ax_heads = col_double(),
+                       notes = col_character()))
+
+#rename genotypes  
+FT_data = left_join(FT_data, FT_name_key, by = "genotype")
+
+#relevel genotypes  
+FT_data$new_geno = factor(FT_data$new_geno, levels = FT_levels)
+
+#removed the NAs in flowering. this is peice of data we are most interested in!
+FT_data = FT_data %>%
+  filter(flowering != is.na(flowering))
+
+summary(FT_data)
+```
+
+### Calculate new variables  
+	Flowering time (days between germ and flowering)  
+	Flowering duration (days between flowering and final)  
+	Flowering rate (diameter / duration)  
+	Leaf frequency (height/ leaves)  
+```{r}
+FT_data_full = FT_data %>%
+  mutate(
+    flowering_time = flowering - germ,
+    flowering_duration = final - flowering,
+    flowering_rate = diameter / as.double(flowering_duration),
+    leaf_freq = height / leaf_num
+  )
+
+#there are 4 NAs in new_geno, investigate
+
+summary(FT_data_full)
+```
+
+
+
+### Plotting  
+```{r plot_FT_facet}
+ggplot(FT_data_full, 
+       aes(new_geno, flowering_time, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_point(alpha = 0.5, position = position_jitter()) +
+  facet_grid(.~ group) +
+  labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+        legend.position = c(.8,1.2)) + #LOVE this
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+```{r}
+FT_data_full %>%
+  filter(new_geno == "GV 342") %>%
+  filter(flowering_time > 60)
+```
+
+super interesting that there are so many value over 60. Not sure what is going on with planting A WT. 
+
+```{r plot_FT_full}
+ggplot(FT_data_full, 
+       aes(new_geno, flowering_time, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  #facet_grid(.~ group) +
+  labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+```{r plot_duration_facet1}
+ggplot(FT_data_full, 
+       aes(new_geno, flowering_duration, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  facet_grid(.~ group) +
+  labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+What's with the baby group in planting A?
+
+```{r}
+FT_data_full %>%
+  filter(flowering_duration < 2.5)
+```
+
+definitely an input error! oops! Let's filter first, then plot
+
+```{r plot_duration_facet2}
+FT_data_full %>%
+  filter(flowering_duration > 1) %>%
+ggplot(aes(new_geno, flowering_duration, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  facet_grid(.~ group) +
+  labs(title = "Flowering duration",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+B WT is interesting. Wonder if it was cloudy one of those days?  
+
+```{r plot_FT_full}
+FT_data_full %>%
+  filter(flowering_duration > 1) %>%
+ggplot(aes(new_geno, flowering_duration, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_point(alpha = 0.5, position = position_jitter()) +
+  #facet_grid(.~ group) +
+  labs(title = "Flowering duration",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.1)) + #my legend ran away on this one
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+snore.
+
+For flowering rate we have the same filtering problems...
+```{r plot_flower_rate_facet}
+FT_data_full %>%
+  filter(flowering_rate <5) %>%
+ggplot(aes(new_geno, flowering_rate, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_point(alpha = 0.5, position = position_jitter()) +
+  facet_grid(.~ group) +
+  labs(title = "Flowering duration",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) + #
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+```{r plot_flower_rate_full}
+FT_data_full %>%
+  filter(flowering_rate <5) %>%
+ggplot(aes(new_geno, flowering_rate, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_point(alpha = 0.5, position = position_jitter()) +
+  #facet_grid(.~ group) +
+  labs(title = "Flowering duration",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.1)) + #my legend ran away on this one
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+```{r plot_leaf_freq_facet}
+ggplot(FT_data_full, 
+       aes(new_geno, leaf_freq, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  facet_grid(.~ group) +
+  labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "Average stem length/leaf (cm)",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+```{r plot_leaf_freq_facet}
+ggplot(FT_data_full, 
+       aes(new_geno, leaf_freq, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  #facet_grid(.~ group) +
+  labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "Average stem length/leaf (cm)",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2:5)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+
+### Challenge - pivot table  
+Make a plot using pivot table that they can recreate...  
+
+```{r}
+str(FT_data_full)
+```
+
+
+```{r FT_small}
+FT_data_small = FT_data_full[c(18,4, 6, 7, 9:11)]
+str(FT_data_small)  
+```
+
+```{r FT_gather}
+FT_gather = FT_data_small %>%
+  gather( 
+       key = "dev_stage", 
+       value = "dev_date",
+       yellow, flowering, final)
+head(FT_gather)
+```
+
+```{r}
+ggplot(FT_gather, 
+       aes(group, dev_date)) +
+  geom_boxplot(aes(linetype = condition, 
+                   fill = dev_stage),
+               position = position_dodge2(padding = 0.2)) + #order matters!
+  geom_point(aes(color = dev_stage, 
+                 shape = new_geno),
+                 alpha = 0.7, position = position_jitter()) +
+  #facet_grid(.~ group) +
+  labs(title = "Flowering trial Dates",
+       subtitle = "Summer 2019 field trial",
+       x = "date",
+       y = "planting group") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_x_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  scale_color_brewer(palette = "Set1") +
+  coord_flip()
+```
+
+### Troubleshooting  
+
+Someone clearly has a date issue if they are -50 days to flowering...  
+```
+filter(FT_data_full, flowering_time < 30)
+```
+
+flowering is "2019_03_28", should be "2019_08_23" (probably??)
+
+```
+FT_data_full = mutate(FT_data_full, flowering = replace(flowering, flowering == "2019-03-28", "2019-08-23"))
+```
