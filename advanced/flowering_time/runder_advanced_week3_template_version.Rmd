@@ -2,7 +2,9 @@
 title: "FT 05_2020"
 author: "Veronica Thompson"
 date: "May 1, 2020"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -209,7 +211,7 @@ ggplot(aes(new_geno, flowering_duration,
 
 B WT is interesting. Wonder if it was cloudy one of those days?  
 
-```{r plot_FT_full}
+```{r plot_FT_full2}
 FT_data_full %>%
   filter(flowering_duration > 1) %>%
 ggplot(aes(new_geno, flowering_duration, 
@@ -281,7 +283,7 @@ ggplot(aes(new_geno, flowering_rate,
   scale_fill_manual(values = FT_colors)
 ```
 
-```{r plot_leaf_freq_facet}
+```{r plot_leaf_freq_facet1}
 ggplot(FT_data_full, 
        aes(new_geno, leaf_freq, 
            fill = new_geno, 
@@ -303,7 +305,7 @@ ggplot(FT_data_full,
   scale_fill_manual(values = FT_colors)
 ```
 
-```{r plot_leaf_freq_facet}
+```{r plot_leaf_freq_facet2}
 ggplot(FT_data_full, 
        aes(new_geno, leaf_freq, 
            fill = new_geno, 
@@ -361,7 +363,7 @@ ggplot(FT_gather,
        subtitle = "Summer 2019 field trial",
        x = "date",
        y = "planting group") +
-  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
   theme(legend.direction = "horizontal",
       legend.position = c(.8,1.2)) +
   #scale_x_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +

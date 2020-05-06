@@ -24,7 +24,7 @@ Outline:
 4. Stat summary  
 
 *Note*: when starting this document find/replace "template" with appropriate experiment descriptor.  
-Each coade chunk needs "r" indicator added as it is updated.  
+Each code chunk needs "r" indicator added as it is updated.  
 
 ### Input aesthectics  
 Colors set to blue/green qualitative palette for now.  
