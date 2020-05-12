@@ -88,7 +88,7 @@ flights %>%
 Question 1.7 Departed between midnight and 6am (inclusive)  
 ```{r}
 flights %>%
-  filter(dep_time == 2400 | dep_time <= 600) %>%
+  filter(dep_time <= 600) %>%
   ggplot() +
   geom_histogram(aes(x = dep_time))
 ```
@@ -163,8 +163,9 @@ select(flights, contains("TIME", ignore.case = FALSE)) #ignore.case is an argume
 Question 1. Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.  
 ```{r}
 flights %>%
-  mutate(sched_dep_time_min = sched_dep_time %/% 100 *60 + sched_dep_time %% 100) %>%
-  select(sched_dep_time, sched_dep_time_min) %>%
+  mutate(sched_dep_time_min = sched_dep_time %/% 100 *60 + sched_dep_time %% 100,
+         sched_arr_time_min = sched_arr_time %/% 100 *60 + sched_arr_time %% 100) %>%
+  select(sched_dep_time, sched_dep_time_min, sched_arr_time_min) %>%
   arrange(sched_dep_time_min)
 ```
 

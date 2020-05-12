@@ -90,7 +90,9 @@ summary(FT_data)
 ```{r}
 FT_data_full = FT_data %>%
   mutate(
+    yellow_time = yellow - germ,
     flowering_time = flowering - germ,
+    final_time = final - germ,
     flowering_duration = final - flowering,
     flowering_rate = diameter / as.double(flowering_duration),
     leaf_freq = height / leaf_num
@@ -132,6 +134,27 @@ FT_data_full %>%
 ```
 
 super interesting that there are so many value over 60. Not sure what is going on with planting A WT. 
+```{r plot_FT_full}
+ggplot(FT_data_full, 
+       aes(new_geno,yellow_time, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  #facet_grid(.~ group) +
+  labs(title = "Yellow petals time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
 
 ```{r plot_FT_full}
 ggplot(FT_data_full, 
@@ -142,6 +165,27 @@ ggplot(FT_data_full,
   geom_jitter(alpha = 0.5) +
   #facet_grid(.~ group) +
   labs(title = "Flowering time",
+       subtitle = "Summer 2019 field trial",
+       x = "genotype",
+       y = "days",
+       fill = "Genotype",
+       shape = "Genotype") +
+  #theme(axis.text.x = element_text(angle = 65, vjust = .5)) +
+  theme(legend.direction = "horizontal",
+      legend.position = c(.8,1.2)) +
+  #scale_y_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22)) +
+  #scale_color_manual(values = ) + 
+  scale_fill_manual(values = FT_colors)
+```
+```{r plot_FT_full}
+ggplot(FT_data_full, 
+       aes(new_geno, final_time, 
+           fill = new_geno, 
+           shape = new_geno)) + 
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(alpha = 0.5) +
+  #facet_grid(.~ group) +
+  labs(title = "Final flowering time",
        subtitle = "Summer 2019 field trial",
        x = "genotype",
        y = "days",
