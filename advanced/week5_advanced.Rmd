@@ -171,12 +171,16 @@ iris_unique_val
 ```
 
 
-12.3.5 #3  
+21.3.5 #3  
 Write a function that prints the mean of each numeric column in a data frame, along with its name. For example, show_mean(iris) would print:  
 
 function called show mean
 for each column, calculates mean
 ```{r}
-show_mean <- function(x) 
+show_mean <- function(x) {
+  show_mean_out <- 
+}
+
+
 ```
 
