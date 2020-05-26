@@ -1,0 +1,137 @@
+---
+title: "week6_advanced"
+author: "Veronica Thompson"
+date: "5/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+### Week 6 exercises
+
+##### Dull560 LUC data set  
+Graph time and luminescence for each genotype  
+* Make sure data is formatted properly  
+* Calculate the average luminescence of each genotype at each time point  
+* Scale luminescence of all genotypes  
+  + Universal background subtraction so trough values are close to 0 (subtract the same thing from all genotypes)  
+  + Within each genotype, scale luminescence from 1 to 0 (so the peak = 1)  
+  + Try this using *grouped functions* (grouped mutates/summaries)  
+  + Also try this using *mapping loops* (from purrr) for comparison (or for loops if you’d prefer)  
+* Make your graph - think about aesthetics  
+* Optional: calculate standard error of luminescence of each genotype at each time point and use that to create error bars  
+  
+```{r}
+clock_data <- read_csv("Dull 560_All_Results.csv",
+                     col_types = cols(
+                       Genotype = col_factor()))
+
+clock_data <- select(clock_data, 1:6, 19:89)
+
+head(clock_data)
+summary(clock_data$Genotype)
+```
+
+average lum, mins, and maxes at each timepoint by group
+```{r}
+clock_long <- clock_data %>%
+  pivot_longer(cols = 7:77, names_to = "ZT", values_to = "lum")
+
+
+clock_long$ZT <- sapply(clock_long$ZT, as.integer)
+
+clock_ave_lum <- clock_long %>%
+  group_by(Genotype, ZT) %>%
+  summarise(average_lum = mean(lum, na.rm = T))
+
+head(clock_ave_lum)
+```
+
+Next, subtract universal background -> what is the lowest minimum?  
+```{r}
+min(clock_long$lum)
+```
+
+subtract universal background from all lum values
+```{r}
+clock_scaled <- clock_long %>%
+  mutate(lum_background = lum - min(clock_long$lum))
+
+summary(clock_scaled$lum_background)
+```
+
+find max values to scale to by genotype
+```{r}
+clock_scaled_geno <- clock_scaled %>%
+  group_by(Genotype) %>%
+  summarise(scaled_min = min(lum_background),
+            scaled_max = max(lum_background))
+
+clock_scaled_geno
+```
+
+scale all values by genotype
+```{r}
+clock_scaled_final <- clock_scaled %>% 
+  group_by(Genotype) %>%
+  mutate(lum_scaled = lum_background / max(lum_background)) #this can't be right...
+
+summary(clock_scaled_final$lum_scaled) 
+
+```
+
+```{r}
+clock_scaled_final %>%
+  sample_n(10) %>%
+  filter(ZT > 48 & ZT <144) %>%
+  ggplot(aes(ZT, lum_scaled, color = Genotype)) +
+  geom_point(a=.2)
+```
+
+ah yes... sampling doesn't work for this format. make a random sample list to use for filtering. 
+
+```{r}
+clock_samples <- clock_data %>% 
+  sample_n(50)
+
+clock_scaled_final %>%
+  filter(ZT >= 48 & ZT <= 144) %>%
+  filter(Region %in% clock_samples$Region) %>%
+  ggplot(aes(ZT, lum_scaled, color = Region, shape = Genotype)) +
+  geom_point(alpha =.4) +
+  geom_line(aes(group  = Region)) +
+  facet_grid(Genotype ~.) +
+  labs(title = "Scaled luminescence",
+       subtitle = "Randomly sampled 8X contstruct",
+       x = "ZT",
+       y = "scaled lum",
+       shape = "Genotype") + 
+  scale_fill_manual() + 
+  scale_x_continuous(breaks = c(48, 72, 96, 120, 144))
+```
+
+I'm supposed to be plotting averages....
+scale the averaged by timepoint data
+```{r}
+clock_scaled_ave <- clock_ave_lum %>%
+  mutate(ave_background = average_lum - min(average_lum)) %>%
+  group_by(Genotype) %>%
+  mutate(ave_scaled = ave_background / max(ave_background))
+
+clock_scaled_ave %>%
+  filter(ZT >= 48 & ZT <= 144) %>%
+  ggplot(aes(ZT, ave_scaled, color = Genotype)) +
+  geom_point(alpha =.4) +
+  geom_line() +
+  labs(title = "Scaled luminescence",
+       subtitle = "Average values by genotype",
+       x = "ZT",
+       y = "scaled lum", 
+       color = "Genotype") + 
+  scale_fill_manual() + 
+  scale_x_continuous(breaks = c(48, 72, 96, 120, 144))
+```
+
+BITE ME
