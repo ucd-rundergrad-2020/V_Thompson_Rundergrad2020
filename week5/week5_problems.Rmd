@@ -67,7 +67,7 @@ ggplot(annoying, aes(x = `1`, `2`)) +
 ggplot(annoying, aes(x = annoying$`1`, y= annoying$`2`)) +
   geom_point()
 
-annoying = annoying %>%
+annoying <- annoying %>%
   mutate(`3` = `2` / `1`)
 
 rename(annoying, 
