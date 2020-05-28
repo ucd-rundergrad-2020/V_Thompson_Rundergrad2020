@@ -40,7 +40,7 @@ table2_pop = table2 %>%
 
 table2_rate <- bind_cols(table2_cases, table2_pop) %>%
   mutate(case_rate = count/count1) %>%
-  view()
+  View()
 ```
 
 ```{r}
@@ -48,6 +48,8 @@ table2_rate <- bind_cols(table2_cases, table2_pop) %>%
 
 table4a$rate_1999 = table4a$`1999` / table4b$`1999`
 table4a$rate_2000 = table4a$`2000` / table4b$`2000`
+table4a
+
 ```
 
 Problem 3.  
